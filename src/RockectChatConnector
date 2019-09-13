@@ -1,0 +1,12 @@
+<?php
+
+
+use Httpful\Request;
+
+class ChatClient{
+    public $connector;
+
+    function __construct(){
+    }
+
+}
