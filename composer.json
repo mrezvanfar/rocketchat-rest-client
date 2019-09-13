@@ -1,5 +1,5 @@
 {
-  "name": "mrezvanfar/RocketChat_Rest_Client\n",
+  "name": "mrezvanfar/RocketChat_Rest_Client",
   "description": "RocketChat client - REST API ",
   "autoload": {
     "classmap": ["src/"]
