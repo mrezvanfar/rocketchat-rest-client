@@ -9,4 +9,7 @@ class ChatClient{
     function __construct(){
     }
 
+    function printtest(){
+        echo "Hello!!!";
+    }
 }
