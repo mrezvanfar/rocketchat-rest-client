@@ -1,0 +1,11 @@
+{
+  "name": "mrezvafar/RocketChat_Rest_Client\n",
+  "description": "RocketChat client - REST API ",
+  "autoload": {
+    "classmap": ["src/"]
+  },
+  "minimum-stability": "stable",
+  "require": {
+    "nategood/httpful": "*"
+  }
+}
