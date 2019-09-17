@@ -1,8 +1,10 @@
 {
-  "name": "mrezvanfar/rocketchat_rest_client",
-  "description": "RocketChat client - REST API ",
+  "name": "mrezvanfar/rockechat_rest_client",
+  "description": "RocketChat client - REST API",
   "autoload": {
-    "classmap": ["src/"]
+    "classmap": [
+      "src/"
+    ]
   },
   "minimum-stability": "stable",
   "require": {
