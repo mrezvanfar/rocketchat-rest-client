@@ -1,6 +1,6 @@
 <?php
 
-
+namespace RocketChat;
 use Httpful\Request;
 
 class ChatClient{
