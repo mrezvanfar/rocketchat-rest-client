@@ -118,7 +118,7 @@ class RocketChat{
     public function getUnreadMessagesCount(){
         $this->initRequestToken();
 
-        $response = Request::get( $this->api . 'subscriptions.get' )->send();
+        $response = Request::get( $this->apiURL . 'subscriptions.get' )->send();
         $sum=0;
         foreach ($response->body->update as $value)
             $sum+=$value->unread;
