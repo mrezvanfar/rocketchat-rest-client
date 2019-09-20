@@ -5,8 +5,8 @@ use Httpful\Request;
 
 class RocketChat{
     private $apiURL;
-    private $adminUser="a";
-    private $adminPassword="1";
+    private $adminUser="admin_username";
+    private $adminPassword="admin_password";
     public $username;
     private $password;
     public $userId;
@@ -16,6 +16,8 @@ class RocketChat{
 
     public function __construct($apiURL,$username, $password, $fields = array()){
         Request::ini(Request::init()->sendsJson()->expectsJson());
+        $this->adminUser= env('CHAT_ADMIN_USER');
+        $this->adminPassword= env('CHAT_ADMIN_PASSWORD');
         $this->apiURL=$apiURL;
         $this->username = $username;
         $this->password = $password;
@@ -28,10 +30,16 @@ class RocketChat{
     }
 
 
-    private function checkResponseValidity($response)
+    private function checkResponseValidity($response,$type=1)
     {
-        if($response->code == 200 && isset($response->body->status) && $response->body->status == 'success')
-            return true;
+        if ($type==2){
+            if($response->code == 200 && isset($response->body->status) && $response->body->status == 'success')
+                return true;
+        }
+        else{
+            if($response->code == 200 && isset($response->body->success) && $response->body->success == true )
+                return true;
+        }
         return false;
     }
 
@@ -44,7 +52,7 @@ class RocketChat{
             ->body(array( 'user' => $this->username, 'password' => $this->password ))
             ->send();
 
-        if($this->checkResponseValidity($response)) {
+        if($this->checkResponseValidity($response,2)) {
             $this->userId = $response->body->data->userId;
             $this->authToken = $response->body->data->authToken;
             return true;
@@ -59,8 +67,8 @@ class RocketChat{
      */
     public function initRequestToken(){
         Request::ini(Request::init()
-                    ->addHeader('X-Auth-Token', $this->authToken)
-                    ->addHeader('X-User-Id', $this->userId));
+            ->addHeader('X-Auth-Token', $this->authToken)
+            ->addHeader('X-User-Id', $this->userId));
     }
 
 
@@ -81,6 +89,7 @@ class RocketChat{
                 'pass' => $password,
             ))
             ->send();
+
         if($this->checkResponseValidity($response) ) {
             return true;
         } else if( strcmp($response->body->error,"Username is already in use")==0) {
@@ -88,7 +97,8 @@ class RocketChat{
         }else{
             //echo( $response->body->error . "\n" );
             echo '<h1>Error: ';
-            print_r( $response->body->error);
+            print_r( $response);
+            exit;
             echo '</h1>';
             return false;
         }
@@ -117,7 +127,6 @@ class RocketChat{
      */
     public function getUnreadMessagesCount(){
         $this->initRequestToken();
-
         $response = Request::get( $this->apiURL . 'subscriptions.get' )->send();
         $sum=0;
         foreach ($response->body->update as $value)
