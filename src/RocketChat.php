@@ -28,19 +28,19 @@ class RocketChat extends ChatConnection{
     }
 
 
+    private function checkResponseValidity($response)
+    {
+        if($response->code == 200 && isset($response->body->status) && $response->body->status == 'success')
+            return true;
+        return false;
+    }
+
     public function login() {
-        $response = Request::post( $this->api . 'login' )
+        $response = Request::post( $this->apiURL . 'login' )
             ->body(array( 'user' => $this->username, 'password' => $this->password ))
             ->send();
 
-        if( $response->code == 200 && isset($response->body->status) && $response->body->status == 'success' ) {
-//            if( $save_auth) {
-//                // save auth token for future requests
-//                $tmp = Request::init()
-//                    ->addHeader('X-Auth-Token', $response->body->data->authToken)
-//                    ->addHeader('X-User-Id', $response->body->data->userId);
-//                Request::ini( $tmp );
-//            }
+        if(checkResponseValidity($response)) {
             $this->userId = $response->body->data->userId;
             $this->authToken = $response->body->data->authToken;
             return true;
@@ -66,7 +66,7 @@ class RocketChat extends ChatConnection{
                 'pass' => $password,
             ))
             ->send();
-        if( $response->code == 200 && isset($response->body->success) && $response->body->success == true ) {
+        if($this->checkResponseValidity($response) ) {
             return true;
         } else if( strcmp($response->body->error,"Username is already in use")==0) {
             return true;
