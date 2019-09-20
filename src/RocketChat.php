@@ -3,7 +3,7 @@ namespace RocketChat;
 
 use Httpful\Request;
 
-class RocketChat extends ChatConnection{
+class RocketChat{
     private $apiURL;
     private $adminUser="a";
     private $adminPassword="1";
