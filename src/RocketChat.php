@@ -100,7 +100,7 @@ class RocketChat{
      * try to login user in rocketchat if the exists, otherwise will register user in rocketchat
      */
     public function loginRegisterIfNotExist() {
-        $admin = new RocketChat($this->api, $this->adminUser, $this->adminPassword);
+        $admin = new RocketChat($this->apiURL , $this->adminUser, $this->adminPassword);
         $admin->initRequestToken();
         if( $admin->login() ) {
             if($admin->registerUser($this->username,$this->password,$this->email,$this->nickname)){
