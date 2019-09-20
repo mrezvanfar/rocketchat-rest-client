@@ -44,7 +44,7 @@ class RocketChat{
             ->body(array( 'user' => $this->username, 'password' => $this->password ))
             ->send();
 
-        if(checkResponseValidity($response)) {
+        if($this->checkResponseValidity($response)) {
             $this->userId = $response->body->data->userId;
             $this->authToken = $response->body->data->authToken;
             return true;
