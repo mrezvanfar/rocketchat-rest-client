@@ -35,6 +35,10 @@ class RocketChat extends ChatConnection{
         return false;
     }
 
+    /**
+     * @return bool
+     * login the user and initialize appropriate token and id
+     */
     public function login() {
         $response = Request::post( $this->apiURL . 'login' )
             ->body(array( 'user' => $this->username, 'password' => $this->password ))
@@ -50,13 +54,24 @@ class RocketChat extends ChatConnection{
         }
     }
 
-
+    /**
+     *  Initialize http request header to use the user id and token for further access
+     */
     public function initRequestToken(){
         Request::ini(Request::init()
                     ->addHeader('X-Auth-Token', $this->authToken)
                     ->addHeader('X-User-Id', $this->userId));
     }
 
+
+    /**
+     * @param $username
+     * @param $password
+     * @param $email
+     * @param $nickname
+     * @return bool  true if the user registered successfully or exists
+     * function would used for registering new user
+     */
     public function registerUser($username,$password,$email,$nickname) {
         $response = Request::post( $this->apiURL . 'users.register' )
             ->body(array(
@@ -80,6 +95,10 @@ class RocketChat extends ChatConnection{
     }
 
 
+    /**
+     * @return bool
+     * try to login user in rocketchat if the exists, otherwise will register user in rocketchat
+     */
     public function loginRegisterIfNotExist() {
         $admin = new RocketChat($this->api, $this->adminUser, $this->adminPassword);
         $admin->initRequestToken();
@@ -92,7 +111,18 @@ class RocketChat extends ChatConnection{
     }
 
 
+    /**
+     * @return int
+     * Get the number of unread message in all rooms and channels
+     */
+    public function getUnreadMessagesCount(){
+        $this->initRequestToken();
 
-
+        $response = Request::get( $this->api . 'subscriptions.get' )->send();
+        $sum=0;
+        foreach ($response->body->update as $value)
+            $sum+=$value->unread;
+        return $sum;
+    }
 
 }
