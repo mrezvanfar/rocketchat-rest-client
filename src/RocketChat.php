@@ -13,6 +13,8 @@ class RocketChat{
     public $authToken;
     public $nickname;
     public $email;
+    public $role;
+    public $discussionId;
 
     public function __construct($apiURL,$username, $password, $fields = array()){
         Request::ini(Request::init()->sendsJson()->expectsJson());
@@ -27,6 +29,10 @@ class RocketChat{
         if( isset($fields['email']) ) {
             $this->email = $fields['email'];
         }
+        if( isset($fields['role']) ) {
+            $this->role = $fields['role'];
+        }
+
     }
 
 
@@ -70,6 +76,42 @@ class RocketChat{
             ->addHeader('X-Auth-Token', $this->authToken)
             ->addHeader('X-User-Id', $this->userId));
     }
+
+    /**
+     * @param $username
+     * @param $password
+     * @param $email
+     * @param $nickname
+     * @param $role
+     * function would used for creating new user
+     */
+    public function createUser($username,$password,$email,$nickname,$role) {
+        $response = Request::post( $this->apiURL . 'users.create' )
+            ->body(array(
+                'name' => $nickname,
+                'email' => $email,
+                'username' => $username,
+                'password' => $password,
+                'roles' => array($role),
+            ))
+            ->send();
+//        print_r( $response);
+//        exit;
+        if($this->checkResponseValidity($response)){
+            return true;
+        }else if( strpos($response->body->error,"is already in use")!=false) {
+            return true;
+        }else{
+            //echo( $response->body->error . "\n" );
+            echo '<h1>Error: ';
+            print_r( $response);
+            exit;
+            echo '</h1>';
+            return false;
+        }
+
+    }
+
 
 
     /**
@@ -121,6 +163,19 @@ class RocketChat{
     }
 
 
+    public function loginCreateIfNotExist() {
+        $admin = new RocketChat($this->apiURL , $this->adminUser, $this->adminPassword);
+        if( $admin->login() ) {
+            $admin->initRequestToken();
+            if($admin->createUser($this->username,$this->password,$this->email,$this->nickname,$this->role)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
     /**
      * @return int
      * Get the number of unread message in all rooms and channels
@@ -132,6 +187,71 @@ class RocketChat{
         foreach ($response->body->update as $value)
             $sum+=$value->unread;
         return $sum;
+    }
+
+    public function addDiscussion($username){
+        $flag=$this->checkIfRoomExist($username);
+        if(!$flag) {
+            $response = Request::post($this->apiURL . 'rooms.createDiscussion')
+                ->body(array(
+                    'prid' => 'GENERAL',
+                    't_name' => $username,
+                    'users' => array($username),
+                ))
+                ->send();
+            if ($this->checkResponseValidity($response)) {
+                $flag=$response->body->discussion->name;
+            } else {
+                //echo( $response->body->error . "\n" );
+                echo '<h1>Error: ';
+                print_r($response);
+                exit;
+                echo '</h1>';
+                return false;
+            }
+        }
+        return $flag;
+    }
+
+
+    public function createDiscussion($username){
+        $admin = new RocketChat($this->apiURL , $this->adminUser, $this->adminPassword);
+        if( $admin->login() ) {
+            $admin->initRequestToken();
+            $this->discussionId=$admin->addDiscussion($username);
+        }
+        return false;
+    }
+
+
+    public function checkIfRoomExist($room)
+    {
+        $response = Request::get($this->apiURL . 'rooms.getDiscussions?roomId=GENERAL')
+            ->send();
+
+        if($this->checkResponseValidity($response) ) {
+            foreach ($response->body->discussions as $value){
+                if(trim($value->fname)===$room){
+                    return $value->name;
+                }
+
+            }
+        }else{
+            echo '<h1>Error: ';
+            print_r( $response);
+            echo '</h1>';
+            //exit;
+        }
+        return false;
+    }
+
+    public function getRoomList(){
+        $admin = new RocketChat($this->apiURL , $this->adminUser, $this->adminPassword);
+        if( $admin->login() ) {
+            $admin->initRequestToken();
+            $admin->roomList();
+        }
+        return false;
     }
 
 }
