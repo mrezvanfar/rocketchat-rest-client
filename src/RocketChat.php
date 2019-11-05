@@ -54,9 +54,13 @@ class RocketChat{
      * login the user and initialize appropriate token and id
      */
     public function login() {
-        $response = Request::post( $this->apiURL . 'login' )
-            ->body(array( 'user' => $this->username, 'password' => $this->password ))
-            ->send();
+        try{
+            $response = Request::post( $this->apiURL . 'login' )
+                ->body(array( 'user' => $this->username, 'password' => $this->password ))
+                ->send();
+        }catch (\Exception $e){
+            return false;
+        }
 
         if($this->checkResponseValidity($response,2)) {
             $this->userId = $response->body->data->userId;
@@ -64,6 +68,17 @@ class RocketChat{
             return true;
         } else {
             echo( $response->body->message . "\n" );
+            return false;
+        }
+    }
+
+
+    public function logout() {
+        $this->initRequestToken();
+        try {
+            $response = Request::get($this->apiURL . 'logout')
+                ->send();
+        }catch (\Exception $e){
             return false;
         }
     }
@@ -86,17 +101,24 @@ class RocketChat{
      * function would used for creating new user
      */
     public function createUser($username,$password,$email,$nickname,$role) {
-        $response = Request::post( $this->apiURL . 'users.create' )
-            ->body(array(
-                'name' => $nickname,
-                'email' => $email,
-                'username' => $username,
-                'password' => $password,
-                'roles' => array($role),
-            ))
-            ->send();
+        try {
+            $response = Request::post($this->apiURL . 'users.create')
+                ->body(array(
+                    'name' => $nickname,
+                    'email' => $email,
+                    'username' => $username,
+                    'password' => $password,
+                    'roles' => array($role),
+                ))
+                ->send();
+        }catch (\Exception $e){
+            return false;
+        }
+
 //        print_r( $response);
 //        exit;
+
+
         if($this->checkResponseValidity($response)){
             return true;
         }else if( strpos($response->body->error,"is already in use")!=false) {
@@ -123,14 +145,18 @@ class RocketChat{
      * function would used for registering new user
      */
     public function registerUser($username,$password,$email,$nickname) {
-        $response = Request::post( $this->apiURL . 'users.register' )
-            ->body(array(
-                'name' => $nickname,
-                'email' => $email,
-                'username' => $username,
-                'pass' => $password,
-            ))
-            ->send();
+        try {
+            $response = Request::post($this->apiURL . 'users.register')
+                ->body(array(
+                    'name' => $nickname,
+                    'email' => $email,
+                    'username' => $username,
+                    'pass' => $password,
+                ))
+                ->send();
+        }catch (\Exception $e){
+            return false;
+        }
 
         if($this->checkResponseValidity($response) ) {
             return true;
@@ -224,17 +250,19 @@ class RocketChat{
     }
 
 
-    public function checkIfRoomExist($room)
-    {
-        $response = Request::get($this->apiURL . 'rooms.getDiscussions?roomId=GENERAL')
-            ->send();
+    public function checkIfRoomExist($room){
+        try {
+            $response = Request::get($this->apiURL . 'rooms.getDiscussions?roomId=GENERAL')
+                ->send();
+        }catch (\Exception $e){
+            return false;
+        }
 
         if($this->checkResponseValidity($response) ) {
             foreach ($response->body->discussions as $value){
                 if(trim($value->fname)===$room){
                     return $value->name;
                 }
-
             }
         }else{
             echo '<h1>Error: ';
@@ -254,4 +282,37 @@ class RocketChat{
         return false;
     }
 
+
+    public function getMessages($roomId,$start,$end){
+//        $response = Request::get($this->apiURL . 'groups.history?roomId='.$roomId)
+//            ->send();
+        try {
+            $response = Request::get($this->apiURL . 'groups.history?roomId=' . $roomId . "&latest=" . $end . "&oldest=" . $start)
+                ->send();
+        }catch (\Exception $e){
+            return false;
+        }
+
+        if($this->checkResponseValidity($response)) {
+            return $response;
+        } else {
+            //echo( $response->body->message . "\n" );
+            return false;
+        }
+
+
+    }
+
+    public function getRoomMessage($room,$start,$end){
+        $admin = new RocketChat($this->apiURL , $this->adminUser, $this->adminPassword);
+
+        if( $admin->login() ) {
+            $admin->initRequestToken();
+            if (($roomId=$admin->checkIfRoomExist($room))!=false){
+                return $admin->getMessages($roomId,$start,$end);
+            }
+
+        }
+        return $room;//.$roomId." ";
+    }
 }
