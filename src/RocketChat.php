@@ -73,6 +73,21 @@ class RocketChat{
     }
 
 
+    public static function logout2($apiURL,$authToken,$userId){
+        Request::ini(Request::init()
+            ->addHeader('X-Auth-Token', $authToken)
+            ->addHeader('X-User-Id', $userId));
+        try {
+            $response = Request::get($apiURL . 'logout')
+                ->send();
+            //print_r($response);
+
+        }catch (\Exception $e){
+            return false;
+        }
+    }
+
+
     public function logout() {
         $this->initRequestToken();
         try {
